@@ -4,7 +4,7 @@ import org.gradle.api.DefaultTask;
 import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.TaskAction;
 
-public abstract class GreetingTask extends DefaultTask {
+public class GreetingTask extends DefaultTask {
     private GreetingSource source;
 
     @Internal

@@ -23,7 +23,7 @@ class BrokenBean: java.io.Serializable {
     }
 }
 
-tasks.register("brokenBean") {
+tasks.register("brokenJavaSerialization") {
     val bean = BrokenBean()
     doLast {
         println("bean = $bean")
