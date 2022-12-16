@@ -18,11 +18,11 @@ Lambdas that capture unsupported values:
 
 ## Groovy closures
 
+TODO - this is not finished yet.
+
 ## Providers that fail during serialization
 
-## File collections that fail during serialization
-
-TODO - this was already fixed in 7.6?
+Consistent with file collections that fail during serialization.
 
 ## Java serializable object that fail during serialization
 

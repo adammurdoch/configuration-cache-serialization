@@ -3,3 +3,4 @@ pluginManagement {
 }
 
 include("java-lambdas")
+include("broken-types")
