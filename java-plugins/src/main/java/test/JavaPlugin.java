@@ -16,7 +16,7 @@ public class JavaPlugin implements Plugin<Project> {
         project.getTasks().register("brokenJavaLambda", task -> {
             Configuration configuration = project.getConfigurations().create("broken");
             task.doFirst(t -> {
-                // Capture an unsupported type from the lambda
+                // Capture an unsupported type
                 System.out.println("configuration = " + configuration.getName());
             });
         });

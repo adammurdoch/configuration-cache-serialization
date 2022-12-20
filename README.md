@@ -1,47 +1,55 @@
 # Configuration Cache Serialization Contract
 
-This repository contains some samples that demonstrate the changes to stabilize the configuration cache serialization
-contracts.
+This repository contains some samples that demonstrate the changes to finalize the configuration cache serialization
+contracts and make them stable. These changes will be included in Gradle 8.1.
 
 ## Java lambdas
 
 A plugin can now use arbitrary lambdas in task state and these are serialized and deserialized correctly.
-In previous versions, a plugin could only use lambdas for a small number of Gradle specific functional interfaces
-(for example `TaskAction`).
+In previous versions, a plugin could only use lambdas for specific Gradle functional interfaces, such as
+`TaskAction`.
 
-To try this out, run the [`javaLamba` task](java-plugins/src/main/java/test/JavaPlugin.java#L11)
+To try this out, run the [`javaLamba`](java-plugins/src/main/java/test/JavaPlugin.java#L11) task.
+
+This [task type](java-plugins/src/main/java/test/GreetingTask.java) uses a custom functional interface
+and the plugin provides an implementation of this using a Java lambda. 
 
 ```shell
 > ./gradlew javaLambda
 > ./gradlew javaLambda
 ```
 
-Compare this with the behavior with Gradle 7.6. The lambda is serialized in the cache miss build but cannot be
+Compare this with the behavior in Gradle 7.6. The lambda is serialized in the cache miss build but cannot be
 deserialized in the cache hit build:
 
 ```shell
 > alias gradle76=# point this to a Gradle 7.6 installation or any recent 7.x version
+
+# Succeeds
 > gradle76 javaLambda
+
 # Fails with class not found exception
 > gradle76 javaLambda
 ```
 
-Java lambdas that capture unsupported values are now detected when serialized. In previous versions, this would fail
-when deserialized in the cache hit build.
+Java lambdas that capture unsupported values are now detected when serialized in the cache miss build.
+In previous versions, this would fail when deserialized in the cache hit build.
 
-To try this out, run the [`brokenJavaLamba` task](java-plugins/src/main/java/test/JavaPlugin.java#L16). The cache
-miss build should fail with an exception that says that the lambda cannot capture an unsupported type.
+To try this out, run the [`brokenJavaLamba`](java-plugins/src/main/java/test/JavaPlugin.java#L16) task.
+
+The cache miss build should fail with an exception that informs the user that the lambda cannot capture an unsupported type.
 
 ```shell
 > ./gradlew brokenJavaLambda
 ```
 
-Compare this with Gradle 7.6, where the cache miss build succeeds but should fail, The failure happens in the cache
+Compare this with Gradle 7.6, where the cache miss build succeeds but should fail. The failure happens in the cache
 hit build instead:
 
 ```shell
 # Succeeds but should fail
 > gradle76 brokenJavaLambda
+
 # Fails with class cast exception
 > gradle76 brokenJavaLambda
 ```
@@ -57,8 +65,9 @@ the cache miss build.
 
 ### Providers that fail during serialization
 
-To try this out, use the [`brokenProvider` task](broken-types/build.gradle.kts#L2). A cache miss build should
-fail with an exception that says that a provider could not be written to the cache.
+To try this out, use the [`brokenProvider`](broken-types/build.gradle.kts#L2) task.
+
+The cache miss build should fail with an exception that informs the user that the provider could not be written to the cache.
 
 ```shell
 > ./gradlew brokenProvider
@@ -81,7 +90,7 @@ This behaviour is consistent with how, for example, file collections that fail d
 
 ## Java serializable object that fail during serialization
 
-You can also use the [`brokenJavaSerialization` task](broken-types/build.gradle.kts#L26) to see the behaviour for Java serialization failures:
+You can also use the [`brokenJavaSerialization`](broken-types/build.gradle.kts#L26) task to see the behaviour for Java serialization failures:
 
 ```shell
 > ./gradlew brokenJavaSerialization
