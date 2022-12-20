@@ -56,18 +56,24 @@ hit build instead:
 
 ## Consistent handling of failures during serialization
 
-Failures that happen during serialization are now consistently treated as fatal problems. When these happen, the configuration cache
-entry is discarded and the build fails.
+During serialization, code is run to calculate the values that are serialized to the cache. For example,
+the value of a `Provider` might be calculated or a dependency graph resolved. This might also include user code,
+for example a user function to map a `Provider` value or determine the default version of a dependency.
 
-Previously, a "broken" value was serialized to the cache for certain types. This behaviour turned out to be confusing
-for people, for example when a remote resource used during serialization happened to be temporarily unavailable during
-the cache miss build.
+Failures in this code mean the work graph is not fully available and should cause the configuration cache entry to
+be discarded. These failures are now consistently treated as fatal problems and when they happen the configuration cache
+entry is discarded, task execution is skipped, and the build fails.
+
+Previously, a "broken" value was serialized to the cache for failures in certain types and task execution attempted.
+This behaviour turned out to be confusing for people, for example when a remote resource used during serialization
+happened to be temporarily unavailable during the cache miss build.
 
 ### Providers that fail during serialization
 
 To try this out, use the [`brokenProvider`](broken-types/build.gradle.kts#L2) task.
 
-The cache miss build should fail with an exception that informs the user that the provider could not be written to the cache.
+The cache miss build should fail with an exception that informs the user that the provider could not be written to the cache,
+along with the exception thrown by the user code.
 
 ```shell
 > ./gradlew brokenProvider
