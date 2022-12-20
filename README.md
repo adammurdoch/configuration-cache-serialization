@@ -57,7 +57,7 @@ hit build instead:
 ## Consistent handling of failures during serialization
 
 During serialization, code is run to calculate the values that are serialized to the cache. For example,
-the value of a `Provider` might be calculated or a dependency graph resolved. This might also include user code,
+the value of a `Provider` might be calculated or a dependency graph resolved. This might also include running user code,
 for example a user function to map a `Provider` value or determine the default version of a dependency.
 
 Failures in this code mean the work graph is not fully available and should cause the configuration cache entry to
@@ -66,7 +66,7 @@ entry is discarded, task execution is skipped, and the build fails.
 
 Previously, a "broken" value was serialized to the cache for failures in certain types and task execution attempted.
 This behaviour turned out to be confusing for people, for example when a remote resource used during dependency
-resolution to be temporarily unavailable during the cache miss build.
+resolution happens to be temporarily unavailable during the cache miss build.
 
 ### Providers that fail during serialization
 
@@ -79,7 +79,7 @@ along with the exception thrown by the user code.
 > ./gradlew brokenProvider
 ```
 
-Compare this with Gradle 7.6, where serialization would complete with a problem and tasks would then run and fail
+Compare this with Gradle 7.6, where serialization would complete with a problem and then tasks would run and fail
 with the same problem:
 
 ```shell
@@ -94,7 +94,7 @@ This behaviour is consistent with how, for example, file collections that fail d
 > gradle76 brokenFileCollection
 ```
 
-### Java Serializable object that fail during serialization
+### Java Serializable objects that fail during serialization
 
 You can also use the [`brokenJavaSerialization`](broken-types/build.gradle.kts#L28) task to see the behaviour for custom 
 Java serialization failures:
@@ -123,12 +123,12 @@ unsupported types being reported regardless of whether the values are used or no
 vast majority of closures serialized to the configuration cache.
 
 Given this, we decided to continue to discard the implicit state when serializing and require build authors to refactor
-their Groovy closures to extract local variables that explicitly reference whatever state from the enclosing scopes
-that the closure requires. We may consider adding some backwards compatible lenient behavior in later Gradle releases to
-help reduce the need for this refactoring for closures defined in Groovy DSL build scripts.
+their Groovy closures to extract local variables that explicitly reference whatever state the closure requires from the enclosing scopes.
+We may consider adding some backwards compatible lenient behavior in later Gradle releases to
+help reduce the need for this refactoring for closures in Groovy DSL build scripts.
 
-We also improved error reporting to help discover these problems earlier, in the cache miss build. This was demonstrated
-in the repository for the [load-after-store feature](https://github.com/adammurdoch/configuration-cache-load-after-store)
+We also improved error reporting to help discover these problems earlier, in the cache miss build.
+This was demonstrated for the [load-after-store feature](https://github.com/adammurdoch/configuration-cache-load-after-store)
 
 ## Support for convention mapping
 
