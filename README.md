@@ -65,8 +65,8 @@ be discarded. These failures are now consistently treated as fatal problems and 
 entry is discarded, task execution is skipped, and the build fails.
 
 Previously, a "broken" value was serialized to the cache for failures in certain types and task execution attempted.
-This behaviour turned out to be confusing for people, for example when a remote resource used during serialization
-happened to be temporarily unavailable during the cache miss build.
+This behaviour turned out to be confusing for people, for example when a remote resource used during dependency
+resolution to be temporarily unavailable during the cache miss build.
 
 ### Providers that fail during serialization
 
@@ -94,9 +94,10 @@ This behaviour is consistent with how, for example, file collections that fail d
 > gradle76 brokenFileCollection
 ```
 
-## Java serializable object that fail during serialization
+### Java Serializable object that fail during serialization
 
-You can also use the [`brokenJavaSerialization`](broken-types/build.gradle.kts#L26) task to see the behaviour for Java serialization failures:
+You can also use the [`brokenJavaSerialization`](broken-types/build.gradle.kts#L28) task to see the behaviour for custom 
+Java serialization failures:
 
 ```shell
 > ./gradlew brokenJavaSerialization
@@ -110,21 +111,23 @@ Compare this with Gradle 7.6, where the cause of the problem is less clear:
 
 ## Groovy closures
 
-After reviewing the behavior for serializing Groovy closures, we decided to leave the behaviour unchanged for the stable
+After reviewing the behavior for Groovy closure serialization, we decided to leave the behaviour unchanged for the stable
 serialization contract.
 
 In short, the dynamic nature of Groovy makes it very difficult to know whether the body of a closure will
-dynamically use any of the implicit state that is automatically captured by a closure - specifically the
+dynamically use any of the implicit state that is automatically captured for a closure - specifically the
 `delegate`, `owner` and `this` properties of a closure. For closures defined in Groovy DSL build scripts or in
-plugins implemented in dynamic Groovy - the vast majority of closures to be serialized - these properties almost always
+Gradle plugins implemented in dynamic Groovy these properties almost always
 reference values that are not supported, for example the `Project` instance. Serializing these values will lead to 
-unsupported types being reported regardless of whether the values are used or not.
+unsupported types being reported regardless of whether the values are used or not. These closures represent the 
+vast majority of closures serialized to the configuration cache.
 
-Given this, we decided to continue to discard this implicit state when serializing and require build authors to refactor
+Given this, we decided to continue to discard the implicit state when serializing and require build authors to refactor
 their Groovy closures to extract local variables that explicitly reference whatever state from the enclosing scopes
-that the closure requires.
+that the closure requires. We may consider adding some backwards compatible lenient behavior in later Gradle releases to
+help reduce the need for this refactoring for closures defined in Groovy DSL build scripts.
 
-We also improved error reporting to help discover these problems earlier, in a cache miss build. This was demonstrated
+We also improved error reporting to help discover these problems earlier, in the cache miss build. This was demonstrated
 in the repository for the [load-after-store feature](https://github.com/adammurdoch/configuration-cache-load-after-store)
 
 ## Support for convention mapping
@@ -132,8 +135,8 @@ in the repository for the [load-after-store feature](https://github.com/adammurd
 After reviewing the behavior for handling convention mappings during serialization, we decided to leave the
 behaviour unchanged for the stable serialization contract.
 
-Convention mappings are a very old internal feature that has leaked into many plugins. They have been replaced by
+Convention mappings are an ancient internal feature that has leaked into many plugins. They have been replaced by
 the public `Property` and `Provider` APIs. The configuration cache serialization currently provides an "80% solution"
 that works fine for most usages of convention mappings. For edge cases that don't work with this solution, we intend to
-encourage plugin authors to use the `Property` and `Provider` APIs instead of convention mappings. We also have options
-to support more usages in a backwards compatible way, as required after stable configuration caching.
+encourage plugin authors to migrate to the `Property` and `Provider` APIs. We can also support more usages in a backwards 
+compatible way in later releases, if required.
